@@ -1,0 +1,4 @@
+openai
+python-dotenv
+pydub
+# webvtt-py
