@@ -2,6 +2,14 @@
 
 A quick-and-dirty transcribing script for transforming audio interviews into NVivo 15 format (rows).
 
+## Brief
+
+The script chunks audio into 25 minute pieces creating them in a subfolder. Then it proceeds to transcribe them 
+using OpenAI Whisper into a preliminary format, and eventually runs that once more through OpenAI GPT to fix so as 
+to comply to the NVivo format.
+
+## Usage 
+
 Audio setup
 1. Transform the audio into mp3 (saves bandwidth, use e.g. Audacity)
 
@@ -20,7 +28,13 @@ Script setup
 
     python run.py <path to interview as .mp3>
 
-## .env file
+### .env file
 
 Rename the `template.env` file as `.env` and fill in your project token key:
 OPENAI_API_KEY=sk-proj-****
+
+## Costs and performance
+
+An hour long interview is cut into chunks as Whisper limits the max length to 30 min.
+
+Transcribing an hour long interview as mp3 and fixing using the script runs in 5 minutes and costs <1 euro.
