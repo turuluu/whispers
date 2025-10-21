@@ -26,7 +26,7 @@ Script setup
 
 4. Run in terminal
 
-    python run.py <path to interview as .mp3>
+    python i2t.py <path to interview as .mp3>
 
 ### .env file
 
@@ -37,4 +37,4 @@ OPENAI_API_KEY=sk-proj-****
 
 An hour long interview is cut into chunks as Whisper limits the max length to 30 min.
 
-Transcribing an hour long interview as mp3 and fixing using the script runs in 5 minutes and costs <1 euro.
+Transcribing an hour long interview as mp3 and transforming it using the script runs in 5 minutes and costs <1 euro.

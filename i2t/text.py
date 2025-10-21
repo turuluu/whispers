@@ -4,15 +4,14 @@ from openai import OpenAI
 
 
 # Whisper-1 only uses the last 224 tokens, and is not an instruct model
-def transcribe(audio_path, prompt):
+def transcribe(audio_path, prompt='', model='whisper-1'):
     log(f'transcribing {audio_path.stem}...')
 
     client = OpenAI()
-    with open(audio_path, "rb") as audio_path:
+    with open(audio_path, 'rb') as audio_path:
         transcription = client.audio.transcriptions.create(
-            model="whisper-1",
+            model=model,
             response_format='srt',
-            # timestamp_granularities=["segment"],
             file=audio_path,
             language='en',
             prompt=prompt
@@ -21,19 +20,19 @@ def transcribe(audio_path, prompt):
     return transcription
 
 
-def gen(user_prompt, system_prompt, temperature=None):
+def gen(user_prompt, system_prompt, model='gpt-4.1', temperature=None):
     client = OpenAI()
     response = client.chat.completions.create(
-        model="gpt-4.1",
+        model=model,
         temperature=temperature,
         messages=[
             {
-                "role": "system",
-                "content": system_prompt
+                'role': 'system',
+                'content': system_prompt
             },
             {
-                "role": "user",
-                "content": user_prompt
+                'role': 'user',
+                'content': user_prompt
             }
         ]
     )
@@ -82,3 +81,10 @@ def transform_to_nvivo(transcript, interviewer="interviewer", interviewee="inter
         )
 
     return gen(transcript, system_prompt)
+
+
+def to_row_format(trcs, interviewer, interviewee):
+    for i, t in enumerate(trcs):
+        log(f'Transforming to final format ({i:02d})...')
+        result = transform_to_nvivo(t, interviewer, interviewee)
+        yield result

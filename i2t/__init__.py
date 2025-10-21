@@ -1,3 +1,3 @@
 from .utlz import rm, clean_dir, log
-from .ai import transcribe, transform_to_nvivo
-from .trim import trim_start
+from .text import transcribe, transform_to_nvivo, to_row_format
+from .audio import trim_start
