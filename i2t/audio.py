@@ -18,16 +18,13 @@ def milliseconds_until_sound(sound, silence_threshold_db=-20.0, chunk_size=10):
     return trim_ms
 
 
-def trim_start(filepath):
-    log(f'Trimming the start')
-    log(f'\t{filepath}')
-    path = Path(filepath)
-    directory = path.parent
-    filename = path.name
+def to_audio(filepath):
     audio_format = Path(filepath).suffix[1:]
-    audio = AudioSegment.from_file(filepath, format=audio_format)
-    start_trim = milliseconds_until_sound(audio)
-    trimmed = audio[start_trim:]
+    return AudioSegment.from_file(filepath, format=audio_format)
 
-    new_filename = directory / f'trimmed_{filename}'
-    return trimmed, new_filename
+
+def trim_start(audio):
+    start_trim = milliseconds_until_sound(audio)
+    return audio[start_trim:]
+
+

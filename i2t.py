@@ -4,9 +4,9 @@ import sys
 from dotenv import load_dotenv
 from pathlib import Path
 
-from i2t import log, rm, clean_dir
-from i2t import transcribe, to_row_format
-from i2t import trim_start
+from i2t.utlz import log, rm, clean_dir
+from i2t.text import transcribe, to_row_format
+from i2t.audio import trim_start, to_audio
 
 if len(sys.argv) < 2:
     print(f'Usage: {sys.argv[0]} <path to audio>')
@@ -16,7 +16,7 @@ load_dotenv()
 interviewer = os.environ.get('interviewer', 'interviewer')
 interviewee = os.environ.get('interviewee', 'interviewee')
 spelling_context = os.environ.get('spelling_context', '')
-segments_in_minutes = os.environ.get('segments_in_minutes', 25)
+segments_in_megabytes = os.environ.get('segments_in_megabytes', 25)
 
 orig_audio_path = Path(sys.argv[1])
 if not orig_audio_path.exists():
@@ -27,17 +27,36 @@ output_dir = Path(orig_audio_path.parent) / orig_audio_path.stem
 clean_dir(output_dir)
 log(f'Created results directory: {output_dir}')
 
-# Whisper accepts audio with max length of 30 minutes, so split audio
+# Whisper accepts audio with max size of 25MB, so split audio
 # into segments
-log(f'Splitting audio into {segments_in_minutes} minute segments...')
-interval_ms = int(segments_in_minutes) * 60 * 1000
+log(f'Splitting audio into {segments_in_megabytes} MB segments...')
+
 start_time = 0
 i = 0
-trimmed_audio, trimmed_filename = trim_start(orig_audio_path)
+
+def whisper_optimize(filepath):
+    log(f'Trimming the start')
+    log(f'\t{filepath}')
+    path = Path(filepath)
+
+    directory = path.parent
+    filename = path.name
+
+    audio = to_audio(filepath)
+    audio = trim_start(audio)
+    audio = audio.set_frame_rate(16000).set_channels(1)
+    new_filename = directory / f'whisper_{filename}'
+    audio.export(new_filename, format="mp3", bitrate="128k")
+    return audio, new_filename
+
+whisper_audio, whisper_filename = whisper_optimize(orig_audio_path)
+# calculate chunks in ms according to whisper API's limitations
+chunks_n = Path(whisper_filename).stat().st_size / segments_in_megabytes
+interval_ms = len(whisper_audio) / chunks_n
 audio_format = Path(orig_audio_path).suffix[1:]
 audio_files = []
-while start_time < len(trimmed_audio):
-    segment = trimmed_audio[start_time:start_time + interval_ms]
+while start_time < len(whisper_audio):
+    segment = whisper_audio[start_time:start_time + interval_ms]
     segment_path = output_dir / f'{orig_audio_path.stem}_{i:02d}.{audio_format}'
     segment.export(segment_path, format=audio_format)
     audio_files.append(segment_path)
@@ -46,6 +65,7 @@ while start_time < len(trimmed_audio):
     i += 1
 
 # Whisper transcribes fillers, punctuation, and should correct initialisms etc if given as prompt
+# A bit hit-and-miss
 whisper_prompt = f"{spelling_context}. Umm... So it's like, let me think. Or? Really!? 100 000 people."
 log(f'Transcription pass 1...')
 prompt = whisper_prompt

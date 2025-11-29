@@ -1,4 +1,5 @@
 import re, webvtt
+from utlz import rm
 
 ################################################################################
 # Cleaning up VTT format transcription to Nvivo format
