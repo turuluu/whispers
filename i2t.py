@@ -29,36 +29,45 @@ log(f'Created results directory: {output_dir}')
 
 # Whisper accepts audio with max size of 25MB, so split audio
 # into segments
-log(f'Splitting audio into {segments_in_megabytes} MB segments...')
 
 start_time = 0
 i = 0
+bitrate='64k'
+def in_mb(size):
+    return f'{(size/(10**6)):.1f}MB'
 
 def whisper_optimize(filepath):
-    log(f'Trimming the start')
-    log(f'\t{filepath}')
+    orig_size = Path(filepath).stat().st_size
+    log(f'File:\t{filepath} - size: {in_mb(orig_size)}')
+    log(f'\tTrimming the start')
     path = Path(filepath)
 
     directory = path.parent
     filename = path.name
 
+    samplerate = 16000
+    log(f'\tconverting (mono, samplerate: {samplerate}, bitrate: {bitrate})')
     audio = to_audio(filepath)
     audio = trim_start(audio)
-    audio = audio.set_frame_rate(16000).set_channels(1)
+    audio = audio.set_frame_rate(samplerate).set_channels(1)
     new_filename = directory / f'whisper_{filename}'
-    audio.export(new_filename, format="mp3", bitrate="128k")
+    audio.export(new_filename, format="mp3", bitrate=bitrate)
     return audio, new_filename
 
 whisper_audio, whisper_filename = whisper_optimize(orig_audio_path)
 # calculate chunks in ms according to whisper API's limitations
-chunks_n = Path(whisper_filename).stat().st_size / segments_in_megabytes
-interval_ms = len(whisper_audio) / chunks_n
-audio_format = Path(orig_audio_path).suffix[1:]
+whisper_filesize = Path(whisper_filename).stat().st_size
+log(f'\t-> {whisper_filename} - size: {in_mb(whisper_filesize)}')
+chunks_n = whisper_filesize / (segments_in_megabytes * (10**6))
+interval_ms = int(len(whisper_audio) / chunks_n)
+audio_format = 'mp3'  # Path(orig_audio_path).suffix[1:]
 audio_files = []
+log(f'\t{chunks_n=}, {interval_ms=}')
+log(f'Splitting audio into {segments_in_megabytes} MB segments...')
 while start_time < len(whisper_audio):
     segment = whisper_audio[start_time:start_time + interval_ms]
     segment_path = output_dir / f'{orig_audio_path.stem}_{i:02d}.{audio_format}'
-    segment.export(segment_path, format=audio_format)
+    segment.export(segment_path, format=audio_format, bitrate=bitrate)
     audio_files.append(segment_path)
     log(f'\t{segment_path.stem}')
     start_time += interval_ms
@@ -83,6 +92,13 @@ for i, file in enumerate(audio_files):
 # reformatted into "rows"
 log(f'Transcription pass 2...')
 fixed_transcripts = []
+
+# test...
+#out_path = output_dir / f'{orig_audio_path.stem}_00.srt'
+#with open(out_path, 'r', encoding='UTF-8') as trcf:
+#    trc = trcf.read()
+#transcriptions
+
 for i, fixed in enumerate(to_row_format(transcriptions, interviewer, interviewee)):
     out_path = output_dir / f'{orig_audio_path.stem}_{i:02d}.txt'
     rm(out_path)

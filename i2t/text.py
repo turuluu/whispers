@@ -53,16 +53,18 @@ def gen(user_prompt, system_prompt, model='gpt-4.1', temperature=None):
 #     return gen(transcript, system_prompt, temperature)
 
 
-def transform_to_nvivo(transcript, interviewer="interviewer", interviewee="interviewee", system_prompt=None):
+def transform_to_nvivo(transcript, interviewer="interviewer", interviewee=["interviewee"], system_prompt=None):
     if system_prompt is None:
         system_prompt = (
             "Can you transform this srt transcript into Nvivo15 compatible text so that, "
-            "using your best guess, connect the sentences together labeling according those "
-            "that belong to the interviewer and those for the interviewee. Use the names "
+            "using your best guess, connect the sentences together under the same timestamp combining them"
+            "into 5-10 second pieces. Label the speaker accordingly i.e. those "
+            "that belong to the interviewer and those for the interviewee. The timeblocks should stay "
+            "relatively short – max 20-30 seconds per timestamp, but mostly between 5-10 seconds. Use the names "
             f"{interviewer} for the interviewer and {interviewee} for the interviewee. "
-            "Combine dialogue turns under the same timestamp when "
-            "they are split during the same turn. Only output the final transcript without further acknowledgements."
-            "Here is a sample of a correct result:\n"
+            "Only output the final transcript without further acknowledgements."
+            "Here are 2 examples of correct results:\n"
+            "<example1>\n"
             "00:00:01\n"
             f"{interviewer}: Do you want to have the video on? The audio quality might be better without the video.\n\n"
             "00:00:07\n"
@@ -72,12 +74,26 @@ def transform_to_nvivo(transcript, interviewer="interviewer", interviewee="inter
             "00:00:23\n"
             f"{interviewee}: Yeah, let's leave it on and then we can turn it off later.\n\n"
             "00:00:26\n"
-            f"{interviewer}: Let's do that. The interview is going to be for coursework, potentially for a paper because the degree does basically exactly this area of research, as far as "
-            "I know. Then it might kind of spawn something, other steps later on. I need to ask you, do you consent that I record and later transcribe this interview?\n\n"
-            "00:01:00\n"
-            f"{interviewee}: No, I don't mind.\n\n"
-            "00:01:02\n"
             f"{interviewer}: Okay, it's okay. Can you state your name for the record?\n\n"
+            "</example1>\n"
+            "<example2>\n"
+            "00:05:10\n"
+            f"{interviewer}: So it also, like, covers the team or the organizational kind of roles and responsibilities.So you'll have information of who to contact, who's the responsible party that knows about certain things.\n\n"
+            "00:05:28\n"
+            f"{interviewee}: No, no, no.\n\n"
+            "00:05:29\n"
+            f"{interviewer}: Oh, okay.\n\n"
+            "00:05:30\n"
+            f"{interviewee}: So what I meant is, if I didn't have custom GPT, I have to talk to, like, two or three people about this issue. Thanks to chat GPT, I don't have to talk to any person.I can just resolve my issue just asking.\n\n"
+            "00:05:46\n"
+            f"{interviewer}: Yeah.So it's like a knowledge base of all the details.\n\n"
+            "00:05:51\n"
+            f"{interviewee}: Yeah.\n\n"
+            "00:05:56\n"
+            f"{interviewer}: And I repeat, I don't want to kind of put you into any risk of leaking IP. But is it possible for you to open up what type of details, like, on a course level maybe?\n\n"
+            "00:06:17\n"
+            f"{interviewee}: Hmm.Like, what are helpful details?\n\n"
+            "</example2>\n"
         )
 
     return gen(transcript, system_prompt)
