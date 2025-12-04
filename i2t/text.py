@@ -4,7 +4,7 @@ from openai import OpenAI
 
 
 # Whisper-1 only uses the last 224 tokens, and is not an instruct model
-def transcribe(audio_path, prompt='', model='whisper-1'):
+def transcribe_request(audio_path, prompt='', model='whisper-1'):
     log(f'transcribing {audio_path.stem}...')
 
     client = OpenAI()
@@ -99,8 +99,7 @@ def transform_to_nvivo(transcript, interviewer="interviewer", interviewee=["inte
     return gen(transcript, system_prompt)
 
 
-def to_row_format(trcs, interviewer, interviewee):
+def to_row_format_request(trcs, interviewer, interviewee):
     for i, t in enumerate(trcs):
-        log(f'Transforming to final format ({i:02d})...')
         result = transform_to_nvivo(t, interviewer, interviewee)
         yield result
